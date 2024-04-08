@@ -1,6 +1,6 @@
-from flask import Flask
+from flask import Flask, render_template
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='templates')
 
 @app.route("/")
 def home():
@@ -8,15 +8,15 @@ def home():
 
 @app.route("/sample_response/")
 def sample_response():
-    return "<h1>Sample Response<h1>"
+    return render_template("sampleResponse.html", content="Sample Response")
 
 @app.route("/degraded_response/")
 def degraded_response():
-    return "<h1>Degraded Response<h1>"
+    return render_template("degradedResponse.html", content="Degraded Response")
 
 @app.route("/prognostic_estimations/")
 def prognostic_estimations():
-    return "<h1>Prognostic Estimations<h1>"
+    return render_template("prognosticEstimations.html", content="Prognostic Estimations")
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
