@@ -1,5 +1,92 @@
-{% extends "graphTemplate.html" %}
-{% block title %}Sample Response{% endblock %}
-{% block tableTitle %}
-<h1>Prognostic Estimations</h1>
-{% endblock %}
+<!doctype html>
+<html>
+    <head>
+        <title>Prognostic Estimations</title>
+        <meta charset- "UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=0.5">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            #chart-container {
+                position: relative;
+                width: 600px;
+                height: 400px;
+                margin: 0 auto;
+            }
+            #chart {
+                position: relative;
+            }
+            .x-axis-title {
+                position: absolute;
+                bottom: -30px;
+                left: 50%;
+                transform: translateX(-50%);
+                font-weight: bold;
+            }
+            .y-axis-title {
+                position: absolute;
+                top: 50%;
+                left: -80px;
+                transform: translateY(-50%) rotate(-90deg);
+                font-weight: bold;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Prognostic Estimations</h1>
+        <div id="chart-container">
+            <canvas id="myChart" width="600" height="400"></canvas>
+            <div class="x-axis-title">Time (minutes)</div>
+            <div class="y-axis-title">State of Health (%)</div>
+        </div>
+        <script>
+            var ctx = document.getElementById('myChart').getContext('2d');
+            var labels = JSON.parse('{{ labels_json | safe }}');
+            var data = JSON.parse('{{ data_json | safe }}');
+            var myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'State of Health',
+                        data: data,
+                        backgroundColor: ['gold'],
+                        borderColor: ['gold'],
+                        borderWidth: 3,
+                        pointRadius: 1,
+                        tension: 0.4,
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: { // Configuration for the X-axis
+                            type: 'linear',
+                            ticks: {
+                                maxTicksLimit: 6, // Controls the maximum number of ticks displayed
+                                major: {
+                                    enabled: true // This will display a bold label for each major tick
+                                },
+                                autoSkip: true, // Allows Chart.js to determine how many labels to skip
+                                maxRotation: 0, // Prevents the labels from rotating
+                                minRotation: 0
+                            },
+                            grid: {
+                                display: true // Turns off grid lines for the x-axis
+                            }
+                        },
+                        y: { // Configuration for the Y-axis
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: true,
+                            },
+                            ticks: {
+                                major: {
+                                    enabled: true // Enable major ticks for y-axis
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
