@@ -1,6 +1,10 @@
 #include <WiFiNINA.h>
 #include <RTCZero.h>
+#include <SPI.h>
+#include <SD.h>
 #include "Sen-Proj-Signal-Secret.h"
+
+#define resistorValue = 1000;
 
 // Wifi components (comment out all wifi stuff if not using)
 char ssid[] = SECRET_SSID;
@@ -22,6 +26,14 @@ unsigned int sampleAmt = 499;
 unsigned int sampleArray[499]; // Array that will contain sample data
 int sampleMinutes = 1;
 
+// String for data
+String dataString = "";
+
+// Pin to select chip (4)
+const int chipSelect = 4;
+
+// Data File component to save to SD
+File dataFile;
 
 // Date and Time values
 RTCZero rtc;
@@ -48,6 +60,17 @@ int s, m, h, d, mo, y;
 
     Serial.println("You're connected to the network");
     Serial.println("-------------------------------");
+
+    Serial.print("Initializing SD card...");
+
+  // see if the card is present and can be initialized:
+    if (!SD.begin(chipSelect)) {
+      Serial.println("Card failed, or not present");
+      // don't do anything more:
+      while (1);
+    }
+    Serial.println("card initialized.");
+
     timeSetup();
   }
 
@@ -56,12 +79,14 @@ int s, m, h, d, mo, y;
   void loop() {
     getDateTime();
     sampleData();
-    printToSerial(); // Essentially where to grab sampled data
+    dataToString();
+    dataToSD();
+    //printToSerial(); // Essentially where to grab sampled data
     //sampleInterval();
     exit(0);
   }
 
-
+  
   void sampleData(){
     digitalWrite(OutputPin,HIGH);
     delay(1000);
@@ -72,11 +97,31 @@ int s, m, h, d, mo, y;
     
   }
 
-  // Sets delay in minutes before the next round of sampling
+    // Sets delay in minutes before the next round of sampling
   void sampleInterval(){
     for(int i = 0; i < sampleMinutes; i++){
       delay(60000);
     }
+  }
+
+  // Puts data into string (Sample Number; Voltage) for sending out via wifi or to SD card
+  void dataToString(){
+    for(int j = 0; j < sampleAmt; j++){
+        float voltage = sampleArray[j] * (3.3/4096);
+        dataString += String(j);
+        dataString += ";";
+        dataString += String(voltage);
+        dataString += "\n";
+    }
+
+    //Serial.println(dataString);
+  }
+
+  void dataToSD(){
+    dataFile = SD.open("datalog.txt", FILE_WRITE);
+    dataFile.print(dataString);
+    dataFile.close();
+    Serial.println("data logged.");
   }
 
   // Gets UTC time WRONG DAY. Can figure out later or get correct from GUI/API
@@ -86,12 +131,12 @@ int s, m, h, d, mo, y;
     rtc.setEpoch(epoch);
   }
 
-// For AZ Timezone from UTC
+  // For AZ Timezone from UTC
   void getDateTime(){
     y = rtc.getYear();
     mo = rtc.getMonth();
     d = rtc.getDay();
-    h = (rtc.getHours() + 5)%24;
+    h = rtc.getHours();
     m = rtc.getMinutes();
     s = rtc.getSeconds();
   }
@@ -117,3 +162,5 @@ int s, m, h, d, mo, y;
     Serial.print("/");
     Serial.print(y);
   }
+
+  
