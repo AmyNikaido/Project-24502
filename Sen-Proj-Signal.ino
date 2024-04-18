@@ -8,8 +8,8 @@ char pass[] = SECRET_PASS;
 int status = WL_IDLE_STATUS;
 
 // Dev board pins
-int OutputPin = 20;
-int analogPin = 16;
+int OutputPin = 20; //A5
+int analogPin = 16; //A1
 
 // ADC Read setup
 int readResolution = 12;
