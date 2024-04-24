@@ -1,20 +1,30 @@
 <!doctype html>
 <html>
     <head>
+        <!-- webpage title tag -->
         <title>Degraded Response</title>
+        
+        <!-- sets character encoding to UTF-8 -->
         <meta charset- "UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=0.5">
+        
+        <!-- includes the Chart.js library -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        
         <style>
+            /* settings size of the graph */
             #chart-container {
                 position: relative;
                 width: 600px;
                 height: 400px;
                 margin: 0 auto;
             }
+            
+            /* settings for chart element */
             #chart {
                 position: relative;
             }
+            
+            /* settings for x axis */
             .x-axis-title {
                 position: absolute;
                 bottom: -30px;
@@ -22,6 +32,8 @@
                 transform: translateX(-50%);
                 font-weight: bold;
             }
+
+            /* settings for y axis */
             .y-axis-title {
                 position: absolute;
                 top: 50%;
@@ -32,21 +44,30 @@
         </style>
     </head>
     <body>
+        <!-- page heading -->
         <h1>Degraded Response</h1>
+        
+        <!-- chart container on page -->
         <div id="chart-container">
             <canvas id="myChart" width="600" height="400"></canvas>
             <div class="x-axis-title">Time (minutes)</div>
             <div class="y-axis-title">Frequency (KHz)</div>
         </div>
+        
+        <!-- script to create chart element -->
         <script>
             var ctx = document.getElementById('myChart').getContext('2d');
+            
+            // gets data from file sent by app.py and stores it
             var labels = JSON.parse('{{ labels_json | safe }}');
             var data = JSON.parse('{{ data_json | safe }}');
+            
+            // creates chart
             var myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
-                    datasets: [{
+                    datasets: [{ //degraded response data set
                         label: 'Degraded Response',
                         data: data,
                         backgroundColor: ['red'],
@@ -54,16 +75,20 @@
                         borderWidth: 3,
                         pointRadius: 1,
                         tension: 0.4,
-                    }, {
+                    }, { // ceiling threshold data set
                         label: 'Ceiling Threshold',
+                        // the Array(500).fill(3.5) creates 500 datapoints at the value of 3.5
+                        // if you can find a way to make a constant line without this, that would be much better
                         data: Array(500).fill(3.5),
                         backgroundColor: ['gold'],
                         borderColor: ['gold'],
                         borderWidth: 3,
                         pointRadius: 1,
                         tension: 0.4,
-                    }, {
+                    }, { // floor threshold data set
                         label: 'Floor Threshold',
+                        // the Array(500).fill(0) creates 500 datapoints at the value of 0
+                        // if you can find a way to make a constant line without this, that would be much better
                         data: Array(500).fill(0),
                         backgroundColor: ['green'],
                         borderColor: ['green'],
@@ -101,6 +126,9 @@
                             }
                         }
                     },
+                    // this was an attempt to make a straight line without the array of datapoints
+                    // so far it was unsuccessful
+                    /*
                     plugins: {
                         annotation: {
                             annotations: [{
@@ -113,6 +141,7 @@
                             }]
                         }
                     }
+                    */
                 }
             });
         </script>

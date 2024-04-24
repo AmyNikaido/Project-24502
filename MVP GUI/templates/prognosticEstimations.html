@@ -1,20 +1,30 @@
 <!doctype html>
 <html>
     <head>
+        <!-- webpage title tag -->
         <title>Prognostic Estimations</title>
+        
+        <!-- sets character encoding to UTF-8 -->
         <meta charset- "UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=0.5">
+        
+        <!-- includes the Chart.js library -->
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        
         <style>
+            /* settings size of the graph */
             #chart-container {
                 position: relative;
                 width: 600px;
                 height: 400px;
                 margin: 0 auto;
             }
+            
+            /* settings for chart element */
             #chart {
                 position: relative;
             }
+            
+            /* settings for x axis */
             .x-axis-title {
                 position: absolute;
                 bottom: -30px;
@@ -22,6 +32,8 @@
                 transform: translateX(-50%);
                 font-weight: bold;
             }
+            
+            /* settings for y axis */
             .y-axis-title {
                 position: absolute;
                 top: 50%;
@@ -32,16 +44,25 @@
         </style>
     </head>
     <body>
+        <!-- page heading -->
         <h1>Prognostic Estimations</h1>
+        
+        <!-- chart container on page -->
         <div id="chart-container">
             <canvas id="myChart" width="600" height="400"></canvas>
             <div class="x-axis-title">Time (minutes)</div>
             <div class="y-axis-title">State of Health (%)</div>
         </div>
+        
+        <!-- script to create chart element -->
         <script>
             var ctx = document.getElementById('myChart').getContext('2d');
+            
+            // gets data from file sent by app.py and stores it
             var labels = JSON.parse('{{ labels_json | safe }}');
             var data = JSON.parse('{{ data_json | safe }}');
+            
+            // creates chart
             var myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
