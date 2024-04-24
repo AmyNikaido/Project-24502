@@ -1,2 +1,4 @@
+# includes Flask and Redis as a dependencies to be installed
+# it does not include a specific version, so the latest compatible versions will be installed
 flask
 redis

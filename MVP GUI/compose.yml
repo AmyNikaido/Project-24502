@@ -1,7 +1,12 @@
 services:
   web:
+    # uses the Dockerfile in the current directory to build the image
     build: .
+    
+    # maps port 8000 on the host to port 5000 inside the container
     ports:
       - "8000:5000"
+  
   redis:
+    # uses pre-build Redis image called redis:alpine from Docker Hub
     image: "redis:alpine"
