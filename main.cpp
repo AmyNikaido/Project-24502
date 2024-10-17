@@ -104,7 +104,7 @@ void dataToString()
 
   for (int j = 0; j < sampleAmt; j++)
   {
-    float voltage = sampleArray[j] * (3.3 / 4096);
+    float voltage = sampleArray[j] * (3.3 / 1023);
     // Format the data as CSV: voltage,time
     dataString += String(voltage) + "," + millis() + "\n";
   }
