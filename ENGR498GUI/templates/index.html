@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graph Layout</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.0.0/dist/chartjs-plugin-zoom.min.js"></script>
+
+</head>
+<body>
+
+    <!-- Header with Logos -->
+    <div class="header">
+        <img src="{{ url_for('static', filename='logo1.png') }}" alt="Logo 1">
+        <img src="{{ url_for('static', filename='logo2.png') }}" alt="Logo 2">
+        <img src="{{ url_for('static', filename='logo3.png') }}" alt="Logo 3">
+    </div>
+
+    <!-- Nav Buttons -->
+    <div class="content">
+        <div class="sidebar">
+            <button class="nav-button" onclick="loadDevices()">Home</button>
+            
+            <!-- Devices Dropdown -->
+            <div class="dropdown">
+                <button class="nav-button">Devices</button>
+                <div class="dropdown-content">
+                    <!-- Search box -->
+                    <input type="text" id="deviceSearch" class="search-input" placeholder="Search devices..." onkeyup="filterDevices()">
+                    <div class="device-list" id="searchResults"></div>                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Graphs -->
+        <div class="graphs" id="all-graphs">
+            <div class="graph" id="voltage-graph">
+                <h2 id="voltage-title">Input voltage: N/A, Healthy reference frequency: N/A, Sampled frequency: N/A</h2>
+                <canvas id="voltageChart"></canvas>
+            </div>
+
+            <div class="graph" id="capacitor-health-graph">
+                <h2 id="capacitor-title">Prognostic estimations: EoL: N/A, RUL: N/A, SoH: N/A</h2>
+                <canvas id="capacitorHealthChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Legend: Explain data here.</p>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
