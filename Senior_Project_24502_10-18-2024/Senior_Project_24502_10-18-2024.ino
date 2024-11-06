@@ -13,13 +13,25 @@ Team 24502: Wireless Sample Mode Response Technique Sensor for Power Supplies an
 #include <ArduinoHttpClient.h>
 #include "arduino_secrets.h"
 
+//#define sampleAmt 500  //This will allow you to change the sample amount quickly without having to scroll through the code
+//#define readResolution 12  //This will allow you to change the read resolution quickly without having to scroll through the code
+
+//This may not work 100% but worth a try if we need to edit quickly
+//#define voltDecayDiv 4096
+//#define ringDiv 4.096
+
 // Constants that won't change:
 const int ledPin = LED_BUILTIN;    // the number of the LED pin
 const int RELAY_PIN1 = 3;  // the Arduino pin, which connects to the IN pin of the second pair of relays. This pair of relays cuts off the capacitor/resistor combo from the power source.
 const int RELAY_PIN2 = 4;  // the Arduino pin, which connects to the IN pin of the first pair of relays. This pair of relays controls the sensor input/sensing.
+//const int RELAY_PIN3 = 5; // the Arduino pin, which connects to the IN pin of the third pair of relays. This pair of relays controls the RingDown input/sensing.
 const int analogPin = 16; // A1, the Arduino pin that will read voltage
+//const int analogPin2 = 17; //A2
 const int pulsePin = 20; //A5, the Arduino pin that will pulse in a voltage to the capacitor
 const int chipSelect = 4; //Pin that will be used for the SD card
+
+// Sets read resolution to 12 bit - VoltDiv = 2^(Resolution) - 3.3/VoltDiv
+//const int readResolution = 12;
 
 // Variables that will change:
 bool readingActive = false; //This bool variable determines if the sensing process is active or not.
@@ -51,7 +63,18 @@ uint16_t ts_second;
 
 
 void setup() {
+  // This section sets up the ADC for a faster sample rate
+  //ADC->CTRLA.bit.ENABLE = 0;                    // Disable ADC
+  //while(ADC->STATUS.bit.SYNCBUSY == 1);         // Wait for synchronization
+  //ADC->CTRLB.reg = ADC_CTRLB_PRESCALER_DIV64;   // Divide Clock by 512.
+  //ADC->AVGCTRL.reg = ADC_AVGCTRL_SAMPLENUM_1 | ADC_AVGCTRL_ADJRES(0x00ul);  // 1 sample | Adjusting result by 0
+  //ADC->SAMPCTRL.reg = 0x00;                     // Sampling Time Length = 0
+  //ADC->CTRLA.bit.ENABLE = 1;                    // Enable ADC
+  //analogReadResolution(readResolution);
 
+  // Uses internal voltage reference for sampling
+  //analogReference(AR_INTERNAL);
+    
   Serial.begin(9600);
   Wire.begin();
   
@@ -178,6 +201,18 @@ void relaySet2(){ //This function activates the second pair of relays that will 
   }
 }
 
+/* Input for relay set 3. you can edit this however you'd like for logic, but looks like it's similar to the others
+void relaySet3(){ //This function activates the second pair of relays that will connect the arduino to the resistor and capacitor, and allow it to pulse a voltage and take readings
+
+  if (readingActive == true){
+    digitalWrite(RELAY_PIN3, LOW); 
+  }
+
+  else if(readingActive == false){
+    digitalWrite(RELAY_PIN3, HIGH); 
+  }
+}
+*/
 void rcReading(){ //This function is the RC decay functionality
 
     relaySet1();
@@ -191,13 +226,15 @@ void rcReading(){ //This function is the RC decay functionality
 
 }
 
+// Possibly change this to reflect it being for voltage decay and split things 
 void sampleDataAndToString(){ //This function pulses in 3.3 volts into the capacitor then samples the decaying voltage into an array, takes readings from the analog pin, and saves that data into an array
 
-  uint16_t sampleAmt = 500;
+  // These can probably go up top before the set up so we're not creating ints when we want to sample, not sure if its for http transfer though
+  uint16_t sampleAmt = 500; // this can be replaced with the #define sampleAmt at the top
   uint32_t dataTime;
   uint32_t timeStart, timeFinish, timeTotal;
-  uint32_t timeArray[500]; //Array that will contain the time of the sample data
-  uint16_t sampleArray[500]; // Array that will contain sample data
+  uint32_t timeArray[500]; //Array that will contain the time of the sample data  //if using the sampleAmt: uint32_t timeArray[sampleAmt];
+  uint16_t sampleArray[500]; // Array that will contain sample data  //if using the sampleAmt: uint16_t sampleArray[sampleAmt];
 
   digitalWrite(pulsePin,HIGH);
   delay(1000);
@@ -223,8 +260,11 @@ void sampleDataAndToString(){ //This function pulses in 3.3 volts into the capac
   }
 
   for(int j = 0; j < sampleAmt; j++){
-     
-      float voltage = sampleArray[j] * (3.3 / 1023.0);
+
+      //float voltage = sampleArray[j] * (3.3 / voltDecayDiv); // If using voltDecayDiv
+      //float voltage = sampleArray[j] * (3.3 / 4096.0); // If voltDecayDiv doesn't work
+      float voltage = sampleArray[j] * (3.3 / 1023.0); // this would need to go to 4096.0 for 12-bit samples
+      
       float voltageInverse = 1/voltage;
       dataTime = timeArray[j];
 
@@ -236,11 +276,50 @@ void sampleDataAndToString(){ //This function pulses in 3.3 volts into the capac
       dataString += "\n";
 
     }
-
+    
     Serial.println("data to string");
 
   readingActive = false;
 }
+
+
+void sampleRingDownDataAndToString(){ //This takes readings for the Ringdown circuit and puts it into an array
+    
+  delay(1000);  //Delay a second to make sure relays have switched and all is ready to sample
+  timeStart = micros();
+    for(uint16_t i = 0; i < sampleAmt; i++){
+      digitalWrite(pulsePin,HIGH);  //Pin needs to stay high while sampling to get a good ring
+      timeFinish = micros();
+      timeTotal = timeFinish - timeStart;
+      timeArray[i] = timeTotal;
+      sampleArray[i] = analogRead(analogPin2);
+    }
+  digitalWrite(pulsePin,LOW);
+  Serial.println("data sampled.");
+
+  if(dataString.length() != 0){
+    dataString = "";
+  }
+
+  for(int j = 0; j < sampleAmt; j++){
+
+      //float voltage = sampleArray[j] * (3.3 / ringDiv); //If using ringDiv
+      float voltage = sampleArray[j] * (3.3 / 4.096); // this needs to 4.096 so I can read at millivolts ~600mV
+      dataTime = timeArray[j];
+
+      dataString += dataTime;
+      dataString += ",";
+      dataString += voltage;
+      dataString += ",";
+      dataString += voltageInverse;
+      dataString += "\n";
+
+    }
+
+  
+}
+
+
 
 void initializeSD(){ //This function initializes the SD card. If the SD card is not present, the Arduino will not function
 
